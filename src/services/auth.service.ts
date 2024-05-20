@@ -18,7 +18,7 @@ export class AuthService {
     /**
      * 
      * @param email The email address of the user
-     * @param password The password to be validateds
+     * @param password The password to be validated
      * @returns A service respomse consumed by a controller
      * @description This method validates an OTP for a particular user with the given email address
      */
@@ -28,14 +28,14 @@ export class AuthService {
             throw new HttpException('You have not requested an OTP with the provided email address', HttpStatus.NOT_FOUND);
         }
 
-        const lastOtp = await user.otps.sort((a, b) => b.fromDate.getTime() - a.fromDate.getTime())[0];
+        const lastOtp = (await user.otps).sort((a, b) => b.fromDate.getTime() - a.fromDate.getTime())[0];
         if (lastOtp.password !== password) {
             throw new HttpException('The OTP that you have provided is not valid', HttpStatus.UNAUTHORIZED);
         }
         if (lastOtp.used) {
             throw new HttpException('The OTP you provided has already been used', HttpStatus.UNAUTHORIZED);
         }
-        const otpExpiry = this.configService.get<number>('OTP_EXPIRY');
+        const otpExpiry = Number(this.configService.get<number>('OTP_EXPIRY'));
         if (otpExpiry && lastOtp.fromDate > new Date(new Date().getTime() - otpExpiry * 1000)) {
             throw new HttpException('The OTP you provided has expired', HttpStatus.GONE)
         }
@@ -63,24 +63,28 @@ export class AuthService {
         }
 
         // Checks if the user has requested an OTP within the OTP's lifetime, and if so, resend the same OTP and update the OTP's fromDate
-        const otpLifetime = this.configService.get<number>('OTP_LIFETIME');
-        const otpResendLimit = this.configService.get<number>('OTP_RESEND_LIMIT');
-        const recentOtps = await user.otps
+        const otpLifetime = Number(this.configService.get<number>('OTP_LIFETIME'));
+        const otpResendLimit = Number(this.configService.get<number>('OTP_RESEND_LIMIT'));
+        const recentOtps = (await user.otps)
             .filter((otp) => (otpLifetime && otp.created > new Date(new Date().getTime() - 60 * otpLifetime * 1000)))
             .sort((a, b) => b.created.getTime() - a.created.getTime());
 
         if (recentOtps.length) {
+            if(recentOtps[0].used){
+                throw new HttpException('The OTP you provided has already been used', HttpStatus.UNAUTHORIZED)
+            }
             // Limit how many times an OTP can be resent
-            if (otpResendLimit && recentOtps[0].resendCount < otpResendLimit) {
+            if (otpResendLimit && recentOtps[0].resendCount >= otpResendLimit) {
                 throw new HttpException('You have requested that this OTP be resent to many times', HttpStatus.TOO_MANY_REQUESTS);
             }
            
             // Update an OTP resendCount and send it again
             await this.otpService.update(recentOtps[0].id, { fromDate: new Date(), resendCount: recentOtps[0].resendCount + 1 });
-            return await this.emailOtp(email, recentOtps[0], 'You should receive and OTP shortly');
+            return await this.emailOtp(email, recentOtps[0], 'You should receive an OTP shortly');
         }
 
-        throw new HttpException('The OTP are requesting be resent has already expired. Please request a new OTP', HttpStatus.BAD_REQUEST)
+        //If there are no recent OTPs then a new one should be created and sent
+        return await this.sendOTP(email);
     }
 
     /**
@@ -98,13 +102,13 @@ export class AuthService {
         }
 
         //Check if a user has exceeded the max number of OTP requests per hour
-        const maxOtps = this.configService.get<number>('MAX_OTP_PER_HOUR');
-        const recentOtp = await user.otps.filter((otp) => otp.created > new Date(new Date().getTime() - 60 * 60 * 1000));
-        if (maxOtps && recentOtp.length > maxOtps) {
+        const maxOtps = Number(this.configService.get<number>('MAX_OTP_PER_HOUR'));
+        const recentOtp = (await user.otps).filter((otp) => otp.created > new Date(new Date().getTime() - 60 * 60 * 1000));
+        if (maxOtps && recentOtp.length >= maxOtps) {
             throw new HttpException('You have exceeded the maximum number of OTP requests per hour', HttpStatus.TOO_MANY_REQUESTS);
         }
 
-        return this.createAndSendOtp(email, 'You should receive and OTP shortly');
+        return this.createAndSendOtp(email, 'You should receive an OTP shortly');
     }
 
     /**

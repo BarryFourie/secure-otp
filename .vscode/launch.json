@@ -1,0 +1,22 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Debug NestJS",
+        "type": "node",
+        "request": "launch",
+        "program": "${workspaceFolder}/src/main.ts",
+        "preLaunchTask": "npm: build",
+        "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+        "sourceMaps": true,
+        "envFile": "${workspaceFolder}/.env",
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": ["run-script", "start:debug"],
+        "skipFiles": ["<node_internals>/**"]
+      },
+    ]
+  }
+  

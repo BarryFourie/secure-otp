@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { join } from 'path';
 import { EjsAdapter } from '@nestjs-modules/mailer/dist/adapters/ejs.adapter'
+import { EmailService } from '@services/email.service';
 
 @Module({
     imports: [
@@ -16,14 +17,19 @@ import { EjsAdapter } from '@nestjs-modules/mailer/dist/adapters/ejs.adapter'
                         user: configService.get<string>('SMTP_USER'),
                         pass: configService.get<string>('SMTP_PASS'),
                     },
-                    from: configService.get<string>('SMTP_FROM'),
+                },
+                defaults: {
+                    from: configService.get<string>('SMTP_FROM')
                 },
                 template: {
                     dir: join(__dirname, '..', '..', 'src', 'emails'),
                     adapter: new EjsAdapter()
                 }
-            })
+            }),
+            inject: [ConfigService]
         })
-    ]
+    ],
+    providers: [EmailService],
+    exports: [EmailService]
 })
 export class EmailModule { }

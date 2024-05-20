@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
 
 @Module({
     imports: [
         TypeOrmModule.forRootAsync({
-            imports:[ConfigService],
+            imports:[ConfigModule],
             useFactory: async (configService:ConfigService)=>({
                 type: 'postgres',
                 host: configService.get<string>('POSTGRES_HOST'),
@@ -17,6 +17,7 @@ import { join } from 'path';
                 //Since this app wont go into production
                 synchronize:true
             }),
+            inject: [ConfigService]
         })
     ]
 })

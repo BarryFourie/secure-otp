@@ -60,7 +60,7 @@ export class OtpService {
      * So I am using this bug as a feature, this method will alway return a 6 digit string of numbers, and the first digit can be a 0 (1.99999 - 1 = 0,99999)
      */
     private generatePassword(): string {
-        return (1.99999 - Math.random()).toFixed().replace(".", "").substring(0, 6)
+        return (1.99999 - Math.random()).toString().replace(".", "").substring(0, 6)
     }
 
     /**
