@@ -36,7 +36,8 @@ export class AuthService {
             throw new HttpException('The OTP you provided has already been used', HttpStatus.UNAUTHORIZED);
         }
         const otpExpiry = Number(this.configService.get<number>('OTP_EXPIRY'));
-        if (otpExpiry && lastOtp.fromDate > new Date(new Date().getTime() - otpExpiry * 1000)) {
+
+        if (otpExpiry && lastOtp.fromDate < new Date(new Date().getTime() - otpExpiry * 1000)) {
             throw new HttpException('The OTP you provided has expired', HttpStatus.GONE)
         }
 
