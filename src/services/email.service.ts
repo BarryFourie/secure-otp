@@ -11,6 +11,8 @@ export class EmailService {
             to,
             subject: 'Here is your awesome One-Time Password',
             template: 'otp.email.ejs',
+            text: `Here is your awsome OTP:${password}. Verify it here: https://barry-8080.entrostat.dev/validate-otp/'`,
+            
             context: {
                 password
             }
