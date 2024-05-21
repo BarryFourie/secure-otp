@@ -4,13 +4,15 @@ import { AppService } from './app.service';
 import { EmailModule } from '@modules/email.module';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from '@modules/auth.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({isGlobal: true}),
+    ConfigModule.forRoot({ isGlobal: true }),
+    ServeStaticModule.forRoot({ rootPath: join(__dirname, '..', 'public', 'client-app') }),
     AuthModule
   ],
-  controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

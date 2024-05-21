@@ -9,6 +9,10 @@
       {
         "include": "emails/**/*",
         "outDir": "dist/src"
+      },
+      {
+        "include": "../public/**/*",
+        "outDir": "dist/public"
       }
     ]
   }
